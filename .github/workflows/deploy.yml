@@ -1,4 +1,4 @@
-name: CI/CD Pipeline apuestas-service
+name: CI/CD Pipeline para apuestas-service
 
 on:
   push:
