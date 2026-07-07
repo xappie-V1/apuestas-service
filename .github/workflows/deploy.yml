@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
 name: CI/CD Pipeline para apuestas-service
-=======
-name: CI/CD Pipeline de apuestas-service
->>>>>>> Stashed changes
 
 on:
   push:
