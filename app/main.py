@@ -18,9 +18,10 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse
 
 from .auth import requiere_admin, usuario_actual
-from .db import conexion, dict_cursor, esperar_bd, init_schema, sembrar_eventos
+from .db import conexion, dict_cursor, esperar_bd, init_schema, sembrar_eventos, ping
 from .simulacion import simular_partido
 
 SELECCIONES = {"local", "empate", "visita"}
@@ -65,6 +66,38 @@ class ResolverRequest(BaseModel):
 #   - liveness: ¿el proceso está vivo? (respuesta simple).
 #   - readiness: ¿está listo para recibir tráfico? Debe verificar la BD.
 # Luego configurar livenessProbe/readinessProbe en el Deployment de EKS.
+
+@app.get("/livez")
+def liveness():
+    """
+    Comprueba que el proceso sigue vivo.
+    No depende de PostgreSQL.
+    """
+    return {
+        "status": "ok",
+        "service": "apuestas-service"
+    }
+
+
+@app.get("/readyz")
+def readiness():
+    """
+    Comprueba que el servicio está listo para recibir tráfico.
+    Verifica la conexión con PostgreSQL.
+    """
+    if ping():
+        return {
+            "status": "ready",
+            "database": "connected"
+        }
+
+    return JSONResponse(
+        status_code=503,
+        content={
+            "status": "not ready",
+            "database": "disconnected"
+        }
+    )
 
 
 @app.get("/api/apuestas/eventos")
